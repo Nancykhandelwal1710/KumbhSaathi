@@ -9,7 +9,13 @@ import {
   ShieldCheck,
   Clock,
 } from "lucide-react";
-import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import {
+  MapContainer,
+  TileLayer,
+  Popup,
+  CircleMarker,
+  Polyline,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
 
@@ -23,6 +29,10 @@ const locationData = [
   { name: "Market Area", lat: 25.431, lng: 81.851, level: "Medium" },
   { name: "Parking Zone", lat: 25.421, lng: 81.836, level: "Low" },
 ];
+
+const getCoordinates = (name) => {
+  return locationData.find((item) => item.name === name);
+};
 
 function App() {
   const [prediction, setPrediction] = useState(null);
@@ -45,6 +55,17 @@ function App() {
 
   const locations = locationData.map((item) => item.name);
   const events = ["Normal Day", "Snan Day", "Peak Ritual", "Evening Aarti"];
+  
+  const sourceLocation = getCoordinates(routeForm.source);
+  const destinationLocation = getCoordinates(routeForm.destination);
+
+  const routePath =
+    sourceLocation && destinationLocation
+      ? [
+          [sourceLocation.lat, sourceLocation.lng],
+          [destinationLocation.lat, destinationLocation.lng],
+        ]
+      : [];
 
   const getPrediction = async () => {
     try {
@@ -131,26 +152,26 @@ function App() {
       <section className="stats-grid">
         <div className="stat-card">
           <Activity />
-          <h3>AI Prediction</h3>
-          <p>Predicts expected crowd density using a trained ML model.</p>
-        </div>
-
-        <div className="stat-card">
-          <MapPinned />
-          <h3>Live Map View</h3>
-          <p>Displays major Mahakumbh zones with crowd-level markers.</p>
-        </div>
-
-        <div className="stat-card">
-          <Route />
-          <h3>Route Optimizer</h3>
-          <p>Suggests safer route options based on congestion level.</p>
+          <h3>1,25,000+</h3>
+          <p>Estimated pilgrims monitored across major Mahakumbh zones.</p>
         </div>
 
         <div className="stat-card">
           <AlertTriangle />
-          <h3>Alerts</h3>
-          <p>Supports authority decisions with congestion warnings.</p>
+          <h3>2 High Risk Zones</h3>
+          <p>Main Ghat and nearby routes require active monitoring.</p>
+        </div>
+
+        <div className="stat-card">
+          <Route />
+          <h3>3 Route Options</h3>
+          <p>Alternative routes generated for safer pilgrim movement.</p>
+        </div>
+
+        <div className="stat-card">
+          <ShieldCheck />
+          <h3>AI Decision Support</h3>
+          <p>Prediction, alerts, and routing combined in one dashboard.</p>
         </div>
       </section>
 
@@ -281,6 +302,14 @@ function App() {
                   </Popup>
                 </CircleMarker>
               ))}
+
+              <Polyline
+                positions={routePath}
+                pathOptions={{
+                  color: "#2563eb",
+                  weight: 6,
+                }}
+              />
             </MapContainer>
           </div>
 
@@ -383,6 +412,47 @@ function App() {
               ))}
             </div>
           )}
+        </div>
+      </section>
+      <section className="workflow-section">
+        <h2>How KumbhSaathi Works</h2>
+        <p>
+          KumbhSaathi uses AI-assisted crowd forecasting to help authorities and
+          pilgrims make safer movement decisions during Mahakumbh.
+        </p>
+
+        <div className="workflow-grid">
+          <div>
+            <h3>1. Data Simulation</h3>
+            <p>
+              Crowd data is generated using event type, location, time, day type,
+              and weather conditions.
+            </p>
+          </div>
+
+          <div>
+            <h3>2. ML Prediction</h3>
+            <p>
+              A Random Forest model predicts expected crowd count and classifies
+              congestion as Low, Medium, or High.
+            </p>
+          </div>
+
+          <div>
+            <h3>3. Route Intelligence</h3>
+            <p>
+              Route suggestions help pilgrims avoid risky paths and support
+              authority-level diversion planning.
+            </p>
+          </div>
+
+          <div>
+            <h3>4. Decision Dashboard</h3>
+            <p>
+              The dashboard combines prediction, alerts, maps, and route guidance
+              into one real-time monitoring interface.
+            </p>
+          </div>
         </div>
       </section>
 

@@ -396,3 +396,56 @@ footer {
   min-height: 420px !important;
   border-radius: 22px;
 }
+
+.workflow-section {
+  margin-top: 28px;
+  background: white;
+  padding: 32px;
+  border-radius: 24px;
+  box-shadow: 0 12px 35px rgba(15, 23, 42, 0.08);
+}
+
+.workflow-section h2 {
+  margin-top: 0;
+  color: #7c2d12;
+}
+
+.workflow-section > p {
+  color: #6b7280;
+  max-width: 850px;
+}
+
+.workflow-grid {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 18px;
+}
+
+.workflow-grid div {
+  background: #fff7ed;
+  padding: 20px;
+  border-radius: 18px;
+  border: 1px solid #fed7aa;
+}
+
+.workflow-grid h3 {
+  margin-top: 0;
+  color: #ea580c;
+}
+
+.workflow-grid p {
+  color: #4b5563;
+}
+
+@media (max-width: 900px) {
+  .workflow-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .workflow-grid {
+    grid-template-columns: 1fr;
+  }
+}
