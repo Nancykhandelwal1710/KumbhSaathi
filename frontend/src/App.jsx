@@ -80,7 +80,7 @@ function App() {
   const [routes, setRoutes] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
-
+  const [weather, setWeather] = useState(null);
   const locationData = cityData[selectedCity].locations;
   const mapCenter = cityData[selectedCity].center;
   const locations = locationData.map((item) => item.name);
@@ -114,7 +114,22 @@ function App() {
           [destinationLocation.lat, destinationLocation.lng],
         ]
       : [];
+  const getWeather = async () => {
+    try {
+      const res = await axios.get("https://api.open-meteo.com/v1/forecast", {
+        params: {
+          latitude: mapCenter[0],
+          longitude: mapCenter[1],
+          current: "temperature_2m,relative_humidity_2m,precipitation,wind_speed_10m",
+        },
+      });
 
+      setWeather(res.data.current);
+    } catch (error) {
+      console.error(error);
+      alert("Weather data could not be loaded.");
+    }
+  };
   const handleCityChange = (city) => {
     const cityLocations = cityData[city].locations;
     const firstLocation = cityLocations[0].name;
@@ -252,6 +267,8 @@ function App() {
               <Users size={18} />
               Predict Crowd
             </button>
+            
+      
 
             <button onClick={getRoutes} className="secondary">
               <Route size={18} />
@@ -323,6 +340,7 @@ function App() {
           <p className="panel-subtitle">
             Select city, location, event type, and conditions to predict crowd density.
           </p>
+          
 
           <div className="form-grid">
             <label>
@@ -622,6 +640,161 @@ function App() {
           </div>
         </div>
       </section>
+
+      <section className="main-grid">
+        <div className="panel">
+          <h2>Best Time Predictor</h2>
+          <p className="panel-subtitle">
+            Helps visitors choose safer time slots for darshan and bathing.
+          </p>
+
+          <div className="time-grid">
+            <div className="time-card safe">
+              <h3>Best Time</h3>
+              <p>5:00 AM - 8:00 AM</p>
+              <span>Low crowd expected</span>
+            </div>
+
+            <div className="time-card moderate">
+              <h3>Manageable Time</h3>
+              <p>8:00 AM - 11:00 AM</p>
+              <span>Moderate movement</span>
+            </div>
+
+            <div className="time-card danger">
+              <h3>Avoid Time</h3>
+              <p>11:00 AM - 3:00 PM</p>
+              <span>High congestion risk</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Smart Travel Advisory</h2>
+
+          <p className="panel-subtitle">
+            AI-powered recommendations for safer pilgrimage planning.
+          </p>
+
+         <div className="safety-card">
+            <h3>{selectedCity} Travel Advisory</h3>
+
+            <p>
+              <strong>Recommended Entry Point:</strong>{" "}
+              {routeForm.source}
+            </p>
+
+            <p>
+              <strong>Recommended Destination:</strong>{" "}
+              {routeForm.destination}
+            </p>
+
+            <p>
+              <strong>Best Visit Time:</strong> 5:00 AM - 8:00 AM
+            </p>
+
+            <p>
+              <strong>Avoid Peak Hours:</strong> 11:00 AM - 3:00 PM
+            </p>
+
+            <p>
+              <strong>Parking Availability:</strong> Available in outer parking zones
+            </p>
+
+            <p>
+              <strong>Safety Recommendation:</strong> Use low crowd routes and avoid
+              heavily congested areas during major rituals.
+            </p>
+          </div>
+
+          <div className="tips-grid">
+            <div>
+              <h4>Visitor Action</h4>
+              <p>
+                Follow suggested routes and travel during recommended hours.
+              </p>
+            </div>
+
+            <div>
+              <h4>Authority Action</h4>
+              <p>
+                Increase volunteer deployment near high-risk crowd locations.
+              </p>
+            </div>
+
+            <div>
+              <h4>Emergency Preparedness</h4>
+              <p>
+                Keep emergency contacts accessible and identify nearby help centers.
+              </p>
+            </div>
+          </div>
+
+          <div className="safety-card" style={{ marginTop: "20px" }}>
+            <h3>Lost Person Assistance</h3>
+
+            <p>
+              Generate a help request reference for missing or separated pilgrims.
+            </p>
+
+            <p>
+              <strong>Reference ID:</strong>{" "}
+              KS-{selectedCity.toUpperCase().slice(0, 3)}-10452
+            </p>
+
+            <p>
+              <strong>Status:</strong> Ready for nearest Police Help Booth
+            </p>
+
+            <p>
+              <strong>Nearest Support:</strong> Lost & Found Center
+            </p>
+          </div>
+        </div>
+      </section>
+      
+      <section className="panel live-section">
+        <h2>Live Weather Risk</h2>
+        <p className="panel-subtitle">
+          Real-time weather data for the selected Kumbh city.
+        </p>
+
+        <button
+          onClick={getWeather}
+          className="secondary"
+          style={{ marginTop: "12px", marginBottom: "16px" }}
+        >
+          <Activity size={18} />
+          Load Live Weather
+        </button> 
+
+        {!weather ? (
+          <p className="empty">Click “Live Weather” to fetch real-time city weather.</p>
+        ) : (
+          <div className="weather-grid">
+            <div>
+              <h3>🌡️ Temperature</h3>
+              <p>{weather.temperature_2m}°C</p>
+            </div>
+
+            <div>
+              <h3>💧 Humidity</h3>
+              <p>{weather.relative_humidity_2m}%</p>
+            </div>
+
+            <div>
+              <h3>🌧️ Rain</h3>
+              <p>{weather.precipitation} mm</p>
+            </div>
+
+            <div>
+              <h3>🌬️ Wind Speed</h3>
+              <p>{weather.wind_speed_10m} km/h</p>
+            </div>
+          </div>
+        )}
+      </section>
+
       <section className="workflow-section">
         <h2>How KumbhSaathi Works</h2>
         <p>
