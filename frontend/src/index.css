@@ -491,3 +491,74 @@ footer {
     max-width: 100%;
   }
 }
+.safety-card {
+  margin-top: 18px;
+  padding: 22px;
+  border-radius: 18px;
+  background: #fff7ed;
+  border-left: 8px solid #ea580c;
+}
+
+.safety-card h3 {
+  margin-top: 0;
+  color: #7c2d12;
+}
+
+.tips-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+
+.tips-grid div {
+  background: #f9fafb;
+  padding: 16px;
+  border-radius: 16px;
+  border: 1px solid #e5e7eb;
+}
+
+.tips-grid h4 {
+  margin-top: 0;
+  color: #ea580c;
+}
+
+.tips-grid p {
+  color: #4b5563;
+}
+
+.emergency-grid {
+  margin-top: 18px;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 14px;
+}
+
+.emergency-card {
+  padding: 18px;
+  border-radius: 18px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+}
+
+.emergency-card h3 {
+  margin-top: 0;
+}
+
+.emergency-card p {
+  color: #4b5563;
+}
+
+.emergency-card span {
+  display: inline-block;
+  margin-top: 8px;
+  font-weight: 700;
+  color: #16a34a;
+}
+
+@media (max-width: 700px) {
+  .tips-grid,
+  .emergency-grid {
+    grid-template-columns: 1fr;
+  }
+}

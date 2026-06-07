@@ -556,7 +556,72 @@ function App() {
           )}
         </div>
       </section>
+      <section className="main-grid">
+        <div className="panel">
+          <h2>Visitor Safety Assistant</h2>
+          <p className="panel-subtitle">
+            Personalized safety guidance for pilgrims based on selected city and crowd conditions.
+          </p>
 
+          <div className="safety-card">
+            <h3>Recommended Visit Plan</h3>
+            <p><strong>Selected City:</strong> {selectedCity}</p>
+            <p><strong>Best Time to Visit:</strong> 5:00 AM - 8:00 AM</p>
+            <p><strong>Avoid Peak Hours:</strong> 11:00 AM - 3:00 PM</p>
+            <p><strong>Suggested Action:</strong> Prefer low-crowd routes and avoid high-risk ghats during peak rituals.</p>
+          </div>
+
+          <div className="tips-grid">
+            <div>
+              <h4>Before Visit</h4>
+              <p>Carry water, ID card, phone battery backup, and note the nearest help center.</p>
+            </div>
+
+            <div>
+              <h4>During Crowd</h4>
+              <p>Move with the flow, avoid pushing, stay with your group, and follow police instructions.</p>
+            </div>
+
+            <div>
+              <h4>If Separated</h4>
+              <p>Go to the nearest Lost & Found center or police assistance booth immediately.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="panel">
+          <h2>Emergency Services</h2>
+          <p className="panel-subtitle">
+            Quick access information for visitor safety and assistance.
+          </p>
+
+          <div className="emergency-grid">
+            <div className="emergency-card">
+              <h3>🚑 Medical Camp</h3>
+              <p>Nearest medical help available near major ghats and entry points.</p>
+              <span>Estimated Distance: 450m</span>
+            </div>
+
+            <div className="emergency-card">
+              <h3>🚓 Police Help</h3>
+              <p>Police booths support crowd control, missing persons, and emergencies.</p>
+              <span>Estimated Distance: 300m</span>
+            </div>
+
+            <div className="emergency-card">
+              <h3>👨‍👩‍👧 Lost & Found</h3>
+              <p>Assistance center for separated family members and missing belongings.</p>
+              <span>Available at main control points</span>
+            </div>
+
+            <div className="emergency-card">
+              <h3>🚪 Emergency Exit</h3>
+              <p>Use marked exit corridors during heavy crowd or emergency diversion.</p>
+              <span>Follow authority announcements</span>
+            </div>
+          </div>
+        </div>
+      </section>
       <section className="workflow-section">
         <h2>How KumbhSaathi Works</h2>
         <p>
