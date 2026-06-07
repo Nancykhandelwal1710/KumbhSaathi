@@ -349,4 +349,50 @@ footer {
   .hero h1 {
     font-size: 36px;
   }
+
+  .real-map {
+    height: 390px;
+    width: 100%;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 1px solid #e5e7eb;
+    margin-top: 16px;
+  }
+
+  .secondary-btn {
+    background: #1d4ed8;
+  }
+
+  .leaflet-container {
+    height: 390px;
+    width: 100%;
+    border-radius: 22px;
+  }
+
+  .real-map {
+    height: 390px;
+    width: 100%;
+    border-radius: 22px;
+    overflow: hidden;
+    border: 2px solid #ea580c;
+    margin-top: 16px;
+  }
+}
+.real-map {
+  height: 420px !important;
+  width: 100% !important;
+  min-height: 420px !important;
+  display: block !important;
+  border-radius: 22px;
+  overflow: hidden;
+  border: 3px solid #ea580c;
+  margin-top: 20px;
+  background: #dbeafe;
+}
+
+.leaflet-container {
+  height: 420px !important;
+  width: 100% !important;
+  min-height: 420px !important;
+  border-radius: 22px;
 }

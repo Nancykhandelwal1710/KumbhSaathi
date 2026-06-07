@@ -9,9 +9,20 @@ import {
   ShieldCheck,
   Clock,
 } from "lucide-react";
+import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaflet";
+import "leaflet/dist/leaflet.css";
 import "./index.css";
 
 const API_URL = "http://127.0.0.1:8000";
+
+const locationData = [
+  { name: "Main Ghat", lat: 25.4358, lng: 81.8463, level: "High" },
+  { name: "Temple Road", lat: 25.4375, lng: 81.848, level: "Medium" },
+  { name: "Railway Station", lat: 25.445, lng: 81.832, level: "Medium" },
+  { name: "Bus Stand", lat: 25.428, lng: 81.84, level: "Low" },
+  { name: "Market Area", lat: 25.431, lng: 81.851, level: "Medium" },
+  { name: "Parking Zone", lat: 25.421, lng: 81.836, level: "Low" },
+];
 
 function App() {
   const [prediction, setPrediction] = useState(null);
@@ -27,29 +38,21 @@ function App() {
     weather_score: 3,
   });
 
-  const locations = [
-    "Main Ghat",
-    "Temple Road",
-    "Railway Station",
-    "Bus Stand",
-    "Market Area",
-    "Parking Zone",
-  ];
+  const [routeForm, setRouteForm] = useState({
+    source: "Railway Station",
+    destination: "Main Ghat",
+  });
 
+  const locations = locationData.map((item) => item.name);
   const events = ["Normal Day", "Snan Day", "Peak Ritual", "Evening Aarti"];
 
   const getPrediction = async () => {
     try {
       setLoading(true);
-
-      const res = await axios.get(`${API_URL}/predict`, {
-        params: form,
-      });
-
+      const res = await axios.get(`${API_URL}/predict`, { params: form });
       setPrediction(res.data);
     } catch (error) {
       alert("Backend is not running. Start FastAPI backend first.");
-      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -58,16 +61,11 @@ function App() {
   const getRoutes = async () => {
     try {
       const res = await axios.get(`${API_URL}/routes`, {
-        params: {
-          source: "Railway Station",
-          destination: "Main Ghat",
-        },
+        params: routeForm,
       });
-
       setRoutes(res.data);
     } catch (error) {
       alert("Backend is not running. Start FastAPI backend first.");
-      console.error(error);
     }
   };
 
@@ -77,7 +75,6 @@ function App() {
       setAlerts(res.data);
     } catch (error) {
       alert("Backend is not running. Start FastAPI backend first.");
-      console.error(error);
     }
   };
 
@@ -85,6 +82,12 @@ function App() {
     if (level === "High") return "high";
     if (level === "Medium") return "medium";
     return "low";
+  };
+
+  const getColor = (level) => {
+    if (level === "High") return "#dc2626";
+    if (level === "Medium") return "#f59e0b";
+    return "#16a34a";
   };
 
   return (
@@ -119,8 +122,8 @@ function App() {
           <ShieldCheck size={42} />
           <h3>AI Safety Assistant</h3>
           <p>
-            Helps authorities and pilgrims identify congestion, avoid risky
-            routes, and improve movement safety.
+            Helps authorities and pilgrims predict congestion, avoid risky routes,
+            and improve movement safety during Mahakumbh.
           </p>
         </div>
       </section>
@@ -128,26 +131,26 @@ function App() {
       <section className="stats-grid">
         <div className="stat-card">
           <Activity />
-          <h3>Real-time Intelligence</h3>
-          <p>Predict crowd density using AI-assisted forecasting.</p>
+          <h3>AI Prediction</h3>
+          <p>Predicts expected crowd density using a trained ML model.</p>
         </div>
 
         <div className="stat-card">
           <MapPinned />
-          <h3>Hotspot Monitoring</h3>
-          <p>Track major locations like ghats, roads, and stations.</p>
+          <h3>Live Map View</h3>
+          <p>Displays major Mahakumbh zones with crowd-level markers.</p>
         </div>
 
         <div className="stat-card">
           <Route />
-          <h3>Route Optimization</h3>
-          <p>Recommend safer paths based on congestion level.</p>
+          <h3>Route Optimizer</h3>
+          <p>Suggests safer route options based on congestion level.</p>
         </div>
 
         <div className="stat-card">
           <AlertTriangle />
-          <h3>Congestion Alerts</h3>
-          <p>Notify when specific zones need crowd diversion.</p>
+          <h3>Alerts</h3>
+          <p>Supports authority decisions with congestion warnings.</p>
         </div>
       </section>
 
@@ -163,9 +166,7 @@ function App() {
               Location
               <select
                 value={form.location}
-                onChange={(e) =>
-                  setForm({ ...form, location: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, location: e.target.value })}
               >
                 {locations.map((location) => (
                   <option key={location}>{location}</option>
@@ -236,45 +237,51 @@ function App() {
           {prediction && (
             <div className={`result-card ${getLevelClass(prediction.crowd_level)}`}>
               <h3>Prediction Result</h3>
-              <p>
-                <strong>Location:</strong> {prediction.location}
-              </p>
-              <p>
-                <strong>Event:</strong> {prediction.event_type}
-              </p>
-              <p>
-                <strong>Predicted Crowd:</strong>{" "}
-                {prediction.predicted_crowd}
-              </p>
-              <p>
-                <strong>Crowd Level:</strong> {prediction.crowd_level}
-              </p>
+              <p><strong>Location:</strong> {prediction.location}</p>
+              <p><strong>Event:</strong> {prediction.event_type}</p>
+              <p><strong>Predicted Crowd:</strong> {prediction.predicted_crowd}</p>
+              <p><strong>Crowd Level:</strong> {prediction.crowd_level}</p>
             </div>
           )}
         </div>
 
-        <div className="panel map-panel">
-          <h2>Mahakumbh Crowd Hotspots</h2>
+        <div className="panel">
+          <h2>Interactive Crowd Map</h2>
           <p className="panel-subtitle">
-            Simulated hotspot view for key public zones.
+            Real map view using OpenStreetMap + Leaflet.
           </p>
 
-          <div className="map-box">
-            <div className="map-point red" style={{ top: "28%", left: "48%" }}>
-              Main Ghat
-            </div>
-            <div className="map-point yellow" style={{ top: "43%", left: "62%" }}>
-              Temple Road
-            </div>
-            <div className="map-point yellow" style={{ top: "58%", left: "35%" }}>
-              Railway Station
-            </div>
-            <div className="map-point green" style={{ top: "70%", left: "54%" }}>
-              Bus Stand
-            </div>
-            <div className="map-point green" style={{ top: "38%", left: "28%" }}>
-              Parking Zone
-            </div>
+          <div className="real-map">
+            <MapContainer
+              center={[25.4358, 81.8463]}
+              zoom={13}
+              scrollWheelZoom={true}
+              style={{ height: "100%", width: "100%" }}
+            >
+              <TileLayer
+                attribution='&copy; OpenStreetMap contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+
+              {locationData.map((loc) => (
+                <CircleMarker
+                  key={loc.name}
+                  center={[loc.lat, loc.lng]}
+                  radius={14}
+                  pathOptions={{
+                    color: getColor(loc.level),
+                    fillColor: getColor(loc.level),
+                    fillOpacity: 0.75,
+                  }}
+                >
+                  <Popup>
+                    <strong>{loc.name}</strong>
+                    <br />
+                    Crowd Level: {loc.level}
+                  </Popup>
+                </CircleMarker>
+              ))}
+            </MapContainer>
           </div>
 
           <div className="legend">
@@ -287,19 +294,47 @@ function App() {
 
       <section className="main-grid">
         <div className="panel">
-          <div className="panel-header">
-            <div>
-              <h2>Route Recommendations</h2>
-              <p className="panel-subtitle">
-                Safer route suggestions for pilgrims.
-              </p>
-            </div>
+          <h2>Route Optimizer</h2>
+          <p className="panel-subtitle">
+            Select source and destination to get safer route suggestions.
+          </p>
 
-            <button onClick={getRoutes}>Load Routes</button>
+          <div className="form-grid">
+            <label>
+              Source
+              <select
+                value={routeForm.source}
+                onChange={(e) =>
+                  setRouteForm({ ...routeForm, source: e.target.value })
+                }
+              >
+                {locations.map((location) => (
+                  <option key={location}>{location}</option>
+                ))}
+              </select>
+            </label>
+
+            <label>
+              Destination
+              <select
+                value={routeForm.destination}
+                onChange={(e) =>
+                  setRouteForm({ ...routeForm, destination: e.target.value })
+                }
+              >
+                {locations.map((location) => (
+                  <option key={location}>{location}</option>
+                ))}
+              </select>
+            </label>
           </div>
 
+          <button className="full-btn secondary-btn" onClick={getRoutes}>
+            Find Best Route
+          </button>
+
           {routes.length === 0 ? (
-            <p className="empty">Click “Load Routes” to view suggestions.</p>
+            <p className="empty">Click “Find Best Route” to view suggestions.</p>
           ) : (
             <div className="cards-list">
               {routes.map((route, index) => (
@@ -309,15 +344,9 @@ function App() {
                 >
                   <h3>{route.route}</h3>
                   <p>{route.path}</p>
-                  <p>
-                    <Clock size={15} /> {route.time}
-                  </p>
-                  <p>
-                    <strong>Crowd:</strong> {route.crowd}
-                  </p>
-                  <p>
-                    <strong>Status:</strong> {route.recommendation}
-                  </p>
+                  <p><Clock size={15} /> {route.time}</p>
+                  <p><strong>Crowd:</strong> {route.crowd}</p>
+                  <p><strong>Status:</strong> {route.recommendation}</p>
                 </div>
               ))}
             </div>
@@ -348,9 +377,7 @@ function App() {
                   className={`mini-card ${getLevelClass(alert.level)}`}
                 >
                   <h3>{alert.area}</h3>
-                  <p>
-                    <strong>Level:</strong> {alert.level}
-                  </p>
+                  <p><strong>Level:</strong> {alert.level}</p>
                   <p>{alert.message}</p>
                 </div>
               ))}
@@ -362,7 +389,7 @@ function App() {
       <footer>
         <p>
           Built for Mahakumbh Innovation Hackathon 2028 | React + FastAPI +
-          Machine Learning
+          Machine Learning + OpenStreetMap
         </p>
       </footer>
     </div>
