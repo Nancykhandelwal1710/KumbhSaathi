@@ -13,7 +13,7 @@ import { MapContainer, TileLayer, Marker, Popup, CircleMarker } from "react-leaf
 import "leaflet/dist/leaflet.css";
 import "./index.css";
 
-const API_URL = "http://127.0.0.1:8000";
+const API_URL = "https://kumbhsaathi-backend-o91s.onrender.com";
 
 const locationData = [
   { name: "Main Ghat", lat: 25.4358, lng: 81.8463, level: "High" },
