@@ -2,7 +2,6 @@ import { useState } from "react";
 import axios from "axios";
 import {
   AlertTriangle,
-  MapPinned,
   Route,
   Users,
   Activity,
@@ -15,33 +14,79 @@ import {
   Popup,
   CircleMarker,
   Polyline,
+  useMap,
 } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import "./index.css";
 
 const API_URL = "https://kumbhsaathi-backend-o91s.onrender.com";
 
-const locationData = [
-  { name: "Main Ghat", lat: 25.4358, lng: 81.8463, level: "High" },
-  { name: "Temple Road", lat: 25.4375, lng: 81.848, level: "Medium" },
-  { name: "Railway Station", lat: 25.445, lng: 81.832, level: "Medium" },
-  { name: "Bus Stand", lat: 25.428, lng: 81.84, level: "Low" },
-  { name: "Market Area", lat: 25.431, lng: 81.851, level: "Medium" },
-  { name: "Parking Zone", lat: 25.421, lng: 81.836, level: "Low" },
-];
-
-const getCoordinates = (name) => {
-  return locationData.find((item) => item.name === name);
+const cityData = {
+  Prayagraj: {
+    center: [25.4358, 81.8463],
+    locations: [
+      { name: "Triveni Sangam", lat: 25.429, lng: 81.885, level: "High" },
+      { name: "Arail Ghat", lat: 25.421, lng: 81.889, level: "Medium" },
+      { name: "Prayagraj Junction", lat: 25.435, lng: 81.846, level: "Medium" },
+      { name: "Civil Lines Bus Stand", lat: 25.45, lng: 81.84, level: "Low" },
+      { name: "Tent City", lat: 25.414, lng: 81.9, level: "Medium" },
+      { name: "Akhara Area", lat: 25.433, lng: 81.875, level: "High" },
+    ],
+  },
+  Ujjain: {
+    center: [23.1765, 75.7885],
+    locations: [
+      { name: "Ram Ghat", lat: 23.1765, lng: 75.7885, level: "High" },
+      { name: "Mahakaleshwar Temple", lat: 23.1828, lng: 75.7682, level: "High" },
+      { name: "Ujjain Junction", lat: 23.1793, lng: 75.7849, level: "Medium" },
+      { name: "Mela Ground", lat: 23.17, lng: 75.79, level: "Medium" },
+      { name: "Nanakaheda Bus Stand", lat: 23.176, lng: 75.755, level: "Low" },
+      { name: "Shipra Riverfront", lat: 23.174, lng: 75.789, level: "High" },
+    ],
+  },
+  Haridwar: {
+    center: [29.9457, 78.1642],
+    locations: [
+      { name: "Har Ki Pauri", lat: 29.9569, lng: 78.1715, level: "High" },
+      { name: "Mansa Devi Route", lat: 29.96, lng: 78.17, level: "Medium" },
+      { name: "Haridwar Railway Station", lat: 29.9457, lng: 78.1642, level: "Medium" },
+      { name: "Haridwar Bus Stand", lat: 29.949, lng: 78.158, level: "Low" },
+      { name: "Chandi Ghat", lat: 29.951, lng: 78.19, level: "Medium" },
+      { name: "Parking Zone", lat: 29.94, lng: 78.15, level: "Low" },
+    ],
+  },
+  Nashik: {
+    center: [20.0059, 73.791],
+    locations: [
+      { name: "Ramkund", lat: 20.007, lng: 73.79, level: "High" },
+      { name: "Trimbakeshwar Temple", lat: 19.9322, lng: 73.5297, level: "High" },
+      { name: "Nashik Road Station", lat: 19.9475, lng: 73.8411, level: "Medium" },
+      { name: "Tapovan Area", lat: 20.02, lng: 73.8, level: "Medium" },
+      { name: "CBS Bus Stand", lat: 20.002, lng: 73.78, level: "Low" },
+      { name: "Godavari Ghat", lat: 20.006, lng: 73.789, level: "High" },
+    ],
+  },
 };
 
+function ChangeMapView({ center }) {
+  const map = useMap();
+  map.setView(center, 13);
+  return null;
+}
+
 function App() {
+  const [selectedCity, setSelectedCity] = useState("Prayagraj");
   const [prediction, setPrediction] = useState(null);
   const [routes, setRoutes] = useState([]);
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
 
+  const locationData = cityData[selectedCity].locations;
+  const mapCenter = cityData[selectedCity].center;
+  const locations = locationData.map((item) => item.name);
+
   const [form, setForm] = useState({
-    location: "Main Ghat",
+    location: "Triveni Sangam",
     event_type: "Snan Day",
     hour: 9,
     day_type: 1,
@@ -49,13 +94,16 @@ function App() {
   });
 
   const [routeForm, setRouteForm] = useState({
-    source: "Railway Station",
-    destination: "Main Ghat",
+    source: "Arail Ghat",
+    destination: "Triveni Sangam",
   });
 
-  const locations = locationData.map((item) => item.name);
   const events = ["Normal Day", "Snan Day", "Peak Ritual", "Evening Aarti"];
-  
+
+  const getCoordinates = (name) => {
+    return locationData.find((item) => item.name === name);
+  };
+
   const sourceLocation = getCoordinates(routeForm.source);
   const destinationLocation = getCoordinates(routeForm.destination);
 
@@ -67,13 +115,76 @@ function App() {
         ]
       : [];
 
+  const handleCityChange = (city) => {
+    const cityLocations = cityData[city].locations;
+    const firstLocation = cityLocations[0].name;
+    const secondLocation = cityLocations[1].name;
+
+    setSelectedCity(city);
+    setForm((prev) => ({
+      ...prev,
+      location: firstLocation,
+    }));
+
+    setRouteForm({
+      source: secondLocation,
+      destination: firstLocation,
+    });
+
+    setPrediction(null);
+    setRoutes([]);
+    setAlerts([]);
+  };
+
   const getPrediction = async () => {
     try {
       setLoading(true);
-      const res = await axios.get(`${API_URL}/predict`, { params: form });
-      setPrediction(res.data);
+
+      const backendLocationMap = {
+        "Triveni Sangam": "Main Ghat",
+        "Arail Ghat": "Temple Road",
+        "Prayagraj Junction": "Railway Station",
+        "Civil Lines Bus Stand": "Bus Stand",
+        "Tent City": "Market Area",
+        "Akhara Area": "Main Ghat",
+
+        "Ram Ghat": "Main Ghat",
+        "Mahakaleshwar Temple": "Temple Road",
+        "Ujjain Junction": "Railway Station",
+        "Mela Ground": "Market Area",
+        "Nanakaheda Bus Stand": "Bus Stand",
+        "Shipra Riverfront": "Main Ghat",
+
+        "Har Ki Pauri": "Main Ghat",
+        "Mansa Devi Route": "Temple Road",
+        "Haridwar Railway Station": "Railway Station",
+        "Haridwar Bus Stand": "Bus Stand",
+        "Chandi Ghat": "Market Area",
+        "Parking Zone": "Parking Zone",
+
+        "Ramkund": "Main Ghat",
+        "Trimbakeshwar Temple": "Temple Road",
+        "Nashik Road Station": "Railway Station",
+        "Tapovan Area": "Market Area",
+        "CBS Bus Stand": "Bus Stand",
+        "Godavari Ghat": "Main Ghat",
+      };
+
+      const res = await axios.get(`${API_URL}/predict`, {
+        params: {
+          ...form,
+          location: backendLocationMap[form.location] || "Main Ghat",
+        },
+      });
+
+      setPrediction({
+        ...res.data,
+        city: selectedCity,
+        location: form.location,
+      });
     } catch (error) {
-      alert("Backend is not running. Start FastAPI backend first.");
+      alert("Backend is not running or backend request failed.");
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -86,16 +197,31 @@ function App() {
       });
       setRoutes(res.data);
     } catch (error) {
-      alert("Backend is not running. Start FastAPI backend first.");
+      alert("Backend is not running or route request failed.");
+      console.error(error);
     }
   };
 
   const getAlerts = async () => {
     try {
       const res = await axios.get(`${API_URL}/alerts`);
-      setAlerts(res.data);
+
+      const cityAlerts = res.data.map((alert) => ({
+        ...alert,
+        area:
+          selectedCity === "Prayagraj"
+            ? alert.area
+            : selectedCity === "Ujjain"
+            ? alert.area.replace("Main Ghat", "Ram Ghat").replace("Temple Road", "Mahakaleshwar Temple").replace("Parking Zone", "Nanakaheda Bus Stand")
+            : selectedCity === "Haridwar"
+            ? alert.area.replace("Main Ghat", "Har Ki Pauri").replace("Temple Road", "Mansa Devi Route").replace("Parking Zone", "Parking Zone")
+            : alert.area.replace("Main Ghat", "Ramkund").replace("Temple Road", "Trimbakeshwar Temple").replace("Parking Zone", "CBS Bus Stand"),
+      }));
+
+      setAlerts(cityAlerts);
     } catch (error) {
-      alert("Backend is not running. Start FastAPI backend first.");
+      alert("Backend is not running or alert request failed.");
+      console.error(error);
     }
   };
 
@@ -118,7 +244,7 @@ function App() {
           <p className="badge">Mahakumbh Innovation Hackathon 2028</p>
           <h1>🕉️ KumbhSaathi</h1>
           <p className="subtitle">
-            Smart Crowd Prediction & Route Optimization for Mahakumbh
+            Smart Crowd Prediction & Route Optimization for Every Kumbh City
           </p>
 
           <div className="hero-buttons">
@@ -141,10 +267,10 @@ function App() {
 
         <div className="hero-card">
           <ShieldCheck size={42} />
-          <h3>AI Safety Assistant</h3>
+          <h3>Scalable Kumbh Safety Assistant</h3>
           <p>
-            Helps authorities and pilgrims predict congestion, avoid risky routes,
-            and improve movement safety during Mahakumbh.
+            Supports city-wise crowd prediction, route optimization, map
+            monitoring, and congestion alerts for major Kumbh locations.
           </p>
         </div>
       </section>
@@ -152,34 +278,50 @@ function App() {
       <section className="stats-grid">
         <div className="stat-card">
           <Activity />
-          <h3>1,25,000+</h3>
-          <p>Estimated pilgrims monitored across major Mahakumbh zones.</p>
+          <h3>4 Kumbh Cities</h3>
+          <p>Prayagraj, Ujjain, Haridwar, and Nashik supported.</p>
         </div>
 
         <div className="stat-card">
           <AlertTriangle />
-          <h3>2 High Risk Zones</h3>
-          <p>Main Ghat and nearby routes require active monitoring.</p>
+          <h3>City-wise Alerts</h3>
+          <p>Congestion alerts adapt based on the selected city.</p>
         </div>
 
         <div className="stat-card">
           <Route />
-          <h3>3 Route Options</h3>
+          <h3>Route Options</h3>
           <p>Alternative routes generated for safer pilgrim movement.</p>
         </div>
 
         <div className="stat-card">
           <ShieldCheck />
           <h3>AI Decision Support</h3>
-          <p>Prediction, alerts, and routing combined in one dashboard.</p>
+          <p>Prediction, alerts, routing, and maps combined in one platform.</p>
         </div>
+      </section>
+
+      <section className="city-selector-section">
+        <div>
+          <h2>Select Kumbh City</h2>
+          <p>
+            KumbhSaathi works as a configurable platform for different Kumbh
+            locations across India.
+          </p>
+        </div>
+
+        <select value={selectedCity} onChange={(e) => handleCityChange(e.target.value)}>
+          {Object.keys(cityData).map((city) => (
+            <option key={city}>{city}</option>
+          ))}
+        </select>
       </section>
 
       <section className="main-grid">
         <div className="panel">
           <h2>Predict Crowd Flow</h2>
           <p className="panel-subtitle">
-            Select conditions and predict expected crowd density.
+            Select city, location, event type, and conditions to predict crowd density.
           </p>
 
           <div className="form-grid">
@@ -199,9 +341,7 @@ function App() {
               Event Type
               <select
                 value={form.event_type}
-                onChange={(e) =>
-                  setForm({ ...form, event_type: e.target.value })
-                }
+                onChange={(e) => setForm({ ...form, event_type: e.target.value })}
               >
                 {events.map((event) => (
                   <option key={event}>{event}</option>
@@ -216,9 +356,7 @@ function App() {
                 min="0"
                 max="23"
                 value={form.hour}
-                onChange={(e) =>
-                  setForm({ ...form, hour: Number(e.target.value) })
-                }
+                onChange={(e) => setForm({ ...form, hour: Number(e.target.value) })}
               />
             </label>
 
@@ -226,9 +364,7 @@ function App() {
               Day Type
               <select
                 value={form.day_type}
-                onChange={(e) =>
-                  setForm({ ...form, day_type: Number(e.target.value) })
-                }
+                onChange={(e) => setForm({ ...form, day_type: Number(e.target.value) })}
               >
                 <option value={0}>Normal Day</option>
                 <option value={1}>Peak Day</option>
@@ -258,6 +394,7 @@ function App() {
           {prediction && (
             <div className={`result-card ${getLevelClass(prediction.crowd_level)}`}>
               <h3>Prediction Result</h3>
+              <p><strong>City:</strong> {prediction.city}</p>
               <p><strong>Location:</strong> {prediction.location}</p>
               <p><strong>Event:</strong> {prediction.event_type}</p>
               <p><strong>Predicted Crowd:</strong> {prediction.predicted_crowd}</p>
@@ -269,16 +406,18 @@ function App() {
         <div className="panel">
           <h2>Interactive Crowd Map</h2>
           <p className="panel-subtitle">
-            Real map view using OpenStreetMap + Leaflet.
+            City-wise map using OpenStreetMap + Leaflet.
           </p>
 
           <div className="real-map">
             <MapContainer
-              center={[25.4358, 81.8463]}
+              center={mapCenter}
               zoom={13}
               scrollWheelZoom={true}
               style={{ height: "100%", width: "100%" }}
             >
+              <ChangeMapView center={mapCenter} />
+
               <TileLayer
                 attribution='&copy; OpenStreetMap contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -288,7 +427,7 @@ function App() {
                 <CircleMarker
                   key={loc.name}
                   center={[loc.lat, loc.lng]}
-                  radius={14}
+                  radius={16}
                   pathOptions={{
                     color: getColor(loc.level),
                     fillColor: getColor(loc.level),
@@ -297,6 +436,8 @@ function App() {
                 >
                   <Popup>
                     <strong>{loc.name}</strong>
+                    <br />
+                    City: {selectedCity}
                     <br />
                     Crowd Level: {loc.level}
                   </Popup>
@@ -317,6 +458,7 @@ function App() {
             <span><b className="dot red-dot"></b> High</span>
             <span><b className="dot yellow-dot"></b> Medium</span>
             <span><b className="dot green-dot"></b> Low</span>
+            <span><b className="dot blue-dot"></b> Selected Route</span>
           </div>
         </div>
       </section>
@@ -414,19 +556,19 @@ function App() {
           )}
         </div>
       </section>
+
       <section className="workflow-section">
         <h2>How KumbhSaathi Works</h2>
         <p>
           KumbhSaathi uses AI-assisted crowd forecasting to help authorities and
-          pilgrims make safer movement decisions during Mahakumbh.
+          pilgrims make safer movement decisions across different Kumbh cities.
         </p>
 
         <div className="workflow-grid">
           <div>
-            <h3>1. Data Simulation</h3>
+            <h3>1. City Configuration</h3>
             <p>
-              Crowd data is generated using event type, location, time, day type,
-              and weather conditions.
+              Authorities select the Kumbh city and monitor location-specific hotspots.
             </p>
           </div>
 
@@ -450,7 +592,7 @@ function App() {
             <h3>4. Decision Dashboard</h3>
             <p>
               The dashboard combines prediction, alerts, maps, and route guidance
-              into one real-time monitoring interface.
+              into one monitoring interface.
             </p>
           </div>
         </div>
