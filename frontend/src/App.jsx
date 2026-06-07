@@ -39,9 +39,9 @@ function App() {
         fontFamily: "Arial"
       }}
     >
-      <h1>🚶 CrowdSense AI</h1>
+      <h1>🕉️ KumbhSaathi</h1>
       <p>
-        Intelligent Crowd Flow Prediction & Route Optimization
+        Smart Crowd Prediction & Route Optimization for Mahakumbh
       </p>
 
       <div style={{ marginTop: "20px" }}>
