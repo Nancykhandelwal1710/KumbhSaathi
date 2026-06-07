@@ -81,6 +81,8 @@ function App() {
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(false);
   const [weather, setWeather] = useState(null);
+  const [nearbyServices, setNearbyServices] = useState([]);
+  const [servicesLoading, setServicesLoading] = useState(false);
   const locationData = cityData[selectedCity].locations;
   const mapCenter = cityData[selectedCity].center;
   const locations = locationData.map((item) => item.name);
@@ -130,6 +132,49 @@ function App() {
       alert("Weather data could not be loaded.");
     }
   };
+  const getNearbyServices = async () => {
+    try {
+      setServicesLoading(true);
+
+      const query = `
+        [out:json][timeout:25];
+        (
+          node["amenity"="hospital"](around:3000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="police"](around:3000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="parking"](around:3000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="bus_station"](around:3000,${mapCenter[0]},${mapCenter[1]});
+        );
+        out body;
+      `;
+
+      const res = await axios.post(
+        "https://overpass-api.de/api/interpreter",
+        query,
+        {
+          headers: {
+            "Content-Type": "text/plain",
+          },
+        }
+      );
+
+      const services = res.data.elements
+        .filter((item) => item.tags?.name)
+        .slice(0, 8)
+        .map((item) => ({
+          name: item.tags.name,
+          type: item.tags.amenity,
+          lat: item.lat,
+          lon: item.lon,
+      }));
+
+      setNearbyServices(services);
+    } catch (error) {
+      console.error(error);
+      alert("Nearby services could not be loaded.");
+    } finally {
+      setServicesLoading(false);
+    }
+  };
   const handleCityChange = (city) => {
     const cityLocations = cityData[city].locations;
     const firstLocation = cityLocations[0].name;
@@ -149,6 +194,8 @@ function App() {
     setPrediction(null);
     setRoutes([]);
     setAlerts([]);
+    setWeather(null);
+    setNearbyServices([]);
   };
 
   const getPrediction = async () => {
@@ -608,36 +655,49 @@ function App() {
         </div>
 
         <div className="panel">
-          <h2>Emergency Services</h2>
-          <p className="panel-subtitle">
-            Quick access information for visitor safety and assistance.
-          </p>
-
-          <div className="emergency-grid">
-            <div className="emergency-card">
-              <h3>🚑 Medical Camp</h3>
-              <p>Nearest medical help available near major ghats and entry points.</p>
-              <span>Estimated Distance: 450m</span>
+          <div className="panel-header">
+            <div>
+              <h2>Real Nearby Services</h2>
+              <p className="panel-subtitle">
+                Live nearby hospitals, police stations, parking, and transport points from OpenStreetMap.
+              </p>
             </div>
 
-            <div className="emergency-card">
-              <h3>🚓 Police Help</h3>
-              <p>Police booths support crowd control, missing persons, and emergencies.</p>
-              <span>Estimated Distance: 300m</span>
-            </div>
-
-            <div className="emergency-card">
-              <h3>👨‍👩‍👧 Lost & Found</h3>
-              <p>Assistance center for separated family members and missing belongings.</p>
-              <span>Available at main control points</span>
-            </div>
-
-            <div className="emergency-card">
-              <h3>🚪 Emergency Exit</h3>
-              <p>Use marked exit corridors during heavy crowd or emergency diversion.</p>
-              <span>Follow authority announcements</span>
-            </div>
+            <button className="secondary" onClick={getNearbyServices}>
+              {servicesLoading ? "Loading..." : "Find Nearby"}
+            </button>
           </div>
+
+          {nearbyServices.length === 0 ? (
+            <p className="empty">
+              Click “Find Nearby” to fetch real public services near {selectedCity}.
+            </p>
+          ) : (
+            <div className="emergency-grid">
+              {nearbyServices.map((service, index) => (
+                <div className="emergency-card" key={index}>
+                  <h3>
+                    {service.type === "hospital"
+                      ? "🚑"
+                      : service.type === "police"
+                      ? "🚓"
+                      : service.type === "parking"
+                      ? "🅿️"
+                      : "🚌"}{" "}
+                    {service.name}
+                  </h3>
+
+                  <p>
+                    Type: {service.type}
+                  </p>
+
+                  <span>
+                    Real OSM location
+                  </span>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
