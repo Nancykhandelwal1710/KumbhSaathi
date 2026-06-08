@@ -133,29 +133,52 @@ function App() {
     }
   };
   const getNearbyServices = async () => {
+    const fallbackServices = {
+      Prayagraj: [
+        { name: "Swaroop Rani Nehru Hospital", type: "hospital" },
+        { name: "Kotwali Police Station", type: "police" },
+        { name: "Civil Lines Parking Zone", type: "parking" },
+        { name: "Civil Lines Bus Stand", type: "bus_station" },
+      ],
+      Ujjain: [
+        { name: "District Hospital Ujjain", type: "hospital" },
+        { name: "Mahakal Police Station", type: "police" },
+        { name: "Nanakheda Parking Zone", type: "parking" },
+        { name: "Nanakheda Bus Stand", type: "bus_station" },
+      ],
+      Haridwar: [
+        { name: "District Hospital Haridwar", type: "hospital" },
+        { name: "Har Ki Pauri Police Chowki", type: "police" },
+        { name: "Pant Dweep Parking", type: "parking" },
+        { name: "Haridwar Bus Stand", type: "bus_station" },
+      ],
+      Nashik: [
+        { name: "Civil Hospital Nashik", type: "hospital" },
+        { name: "Panchavati Police Station", type: "police" },
+        { name: "CBS Parking Area", type: "parking" },
+        { name: "CBS Bus Stand", type: "bus_station" },
+      ],
+    };
+
     try {
       setServicesLoading(true);
 
       const query = `
         [out:json][timeout:25];
         (
-          node["amenity"="hospital"](around:3000,${mapCenter[0]},${mapCenter[1]});
-          node["amenity"="police"](around:3000,${mapCenter[0]},${mapCenter[1]});
-          node["amenity"="parking"](around:3000,${mapCenter[0]},${mapCenter[1]});
-          node["amenity"="bus_station"](around:3000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="hospital"](around:5000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="police"](around:5000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="parking"](around:5000,${mapCenter[0]},${mapCenter[1]});
+          node["amenity"="bus_station"](around:5000,${mapCenter[0]},${mapCenter[1]});
         );
         out body;
       `;
 
-      const res = await axios.post(
-        "https://overpass-api.de/api/interpreter",
-        query,
-        {
-          headers: {
-            "Content-Type": "text/plain",
-          },
-        }
-      );
+      const res = await axios.get("https://overpass-api.de/api/interpreter", {
+        params: {
+          data: query,
+        },
+      });
 
       const services = res.data.elements
         .filter((item) => item.tags?.name)
@@ -163,14 +186,16 @@ function App() {
         .map((item) => ({
           name: item.tags.name,
           type: item.tags.amenity,
-          lat: item.lat,
-          lon: item.lon,
-      }));
+        }));
 
-      setNearbyServices(services);
+      if (services.length > 0) {
+        setNearbyServices(services);
+      } else {
+        setNearbyServices(fallbackServices[selectedCity]);
+      }
     } catch (error) {
       console.error(error);
-      alert("Nearby services could not be loaded.");
+      setNearbyServices(fallbackServices[selectedCity]);
     } finally {
       setServicesLoading(false);
     }
