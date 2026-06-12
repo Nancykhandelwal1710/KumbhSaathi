@@ -328,7 +328,7 @@ function App() {
     <div className="app">
       <section className="hero">
         <div>
-          <p className="badge">Mahakumbh Innovation Hackathon 2026</p>
+          <p className="badge">Mahakumbh Innovation Hackathon 2028</p>
           <h1>🕉️ KumbhSaathi</h1>
           <p className="subtitle">
             Smart Crowd Prediction & Route Optimization for Every Kumbh City
@@ -923,7 +923,7 @@ function App() {
 
       <footer>
         <p>
-          Built for Mahakumbh Innovation Hackathon 2026 | React + FastAPI +
+          Built for Mahakumbh Innovation Hackathon 2028 | React + FastAPI +
           Machine Learning + OpenStreetMap
         </p>
       </footer>
